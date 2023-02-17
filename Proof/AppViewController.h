@@ -7,7 +7,11 @@
 
 #import "AppsManager.h"
 
-@interface AppViewController : UIViewController<UITableViewDelegate, UITableViewDataSource>
+@interface AppViewController : UIViewController<UITableViewDelegate, UITableViewDataSource, UISearchBarDelegate,UISearchResultsUpdating> {
+    NSArray *searchResultsArray;
+    NSMutableArray *userMutableArray;
+}
+@property (retain, nonatomic) UISearchController *searchController;
 @property (retain, nonatomic) UITableView *tableView;
 @property (nonatomic, retain) AppsManager *appsManager;
 @end

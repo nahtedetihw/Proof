@@ -24,10 +24,42 @@ NSString *folderPath;
     self.tableView.delegate = self;
     self.tableView.dataSource = self;
     
+    self.searchController = [[UISearchController alloc]initWithSearchResultsController:nil];
+    self.searchController.searchBar.scopeButtonTitles = [[NSArray alloc]initWithObjects:@"App Name", @"Bundle ID", nil];
+    self.searchController.searchBar.delegate = self;
+    self.searchController.searchResultsUpdater = self;
+    [self.searchController.searchBar sizeToFit];
+    self.searchController.obscuresBackgroundDuringPresentation = NO;
+    self.definesPresentationContext = NO;
+    [self.searchController.searchBar sizeToFit];
+    self.extendedLayoutIncludesOpaqueBars = NO;
+    self.tableView.tableHeaderView = self.searchController.searchBar;
+    self.searchController.hidesNavigationBarDuringPresentation = false;
+    self.searchController.searchBar.showsScopeBar = true;
+    
+    searchResultsArray = [[NSArray alloc]init];
     self.appsManager = [AppsManager new];
 }
 
+-(void)updateSearchResultsForSearchController:(UISearchController *)searchController{
+    NSString *searchString = self.searchController.searchBar.text;
+    NSPredicate *resultPredicate;
+    NSInteger scope = self.searchController.searchBar.selectedScopeButtonIndex;
+        if (scope == 0) {
+            resultPredicate = [NSPredicate predicateWithFormat:@"appName contains[c] %@",searchString];
+        }else{
+            resultPredicate = [NSPredicate predicateWithFormat:@"appIdentifier contains[c] %@",searchString];
+        }
+    searchResultsArray = [self.appsManager.allApps filteredArrayUsingPredicate:resultPredicate];
+    [self.tableView reloadData];
+}
+
+- (void)searchBar:(UISearchBar *)searchBar selectedScopeButtonIndexDidChange:(NSInteger)selectedScope{
+    [self updateSearchResultsForSearchController:self.searchController];
+}
+
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
+    if (self.searchController.active) return [searchResultsArray count];
     return self.appsManager.allApps.count;
 }
 
@@ -40,9 +72,16 @@ NSString *folderPath;
                 cell = [tableView dequeueReusableCellWithIdentifier:cellIdentifier];
                 cell = [[UITableViewCell alloc]initWithStyle:
                         UITableViewCellStyleSubtitle reuseIdentifier:cellIdentifier];
-                cell.textLabel.text = app.appName;
-                cell.detailTextLabel.text = app.appIdentifier;
-                cell.imageView.image = [UIImage _applicationIconImageForBundleIdentifier:cell.detailTextLabel.text format:0 scale:[UIScreen mainScreen].scale];
+                
+                if (self.searchController.active) {
+                    cell.textLabel.text = ((App *)[searchResultsArray objectAtIndex:indexPath.row]).appName;
+                    cell.detailTextLabel.text = ((App *)[searchResultsArray objectAtIndex:indexPath.row]).appIdentifier;
+                    cell.imageView.image = [UIImage _applicationIconImageForBundleIdentifier:((App *)[searchResultsArray objectAtIndex:indexPath.row]).appIdentifier format:0 scale:[UIScreen mainScreen].scale];
+                } else {
+                    cell.textLabel.text = app.appName;
+                    cell.detailTextLabel.text = app.appIdentifier;
+                    cell.imageView.image = [UIImage _applicationIconImageForBundleIdentifier:app.appIdentifier format:0 scale:[UIScreen mainScreen].scale];
+                }
             }
         }
     }

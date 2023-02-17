@@ -6,6 +6,10 @@
 //
 #import "AppsManager.h"
 
+static NSArray *blacklistedApps() {
+    return @[@"com.apple.AAUIViewService", @"com.apple.DemoApp"];
+}
+
 @implementation App
 - (instancetype)init {
     if (self) {

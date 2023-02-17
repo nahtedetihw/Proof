@@ -19,7 +19,10 @@
 @implementation ViewController
 - (void)viewDidLoad {
     if (![[NSFileManager defaultManager] contentsOfDirectoryAtURL:[NSURL fileURLWithPath:@"/var/mobile"] includingPropertiesForKeys:nil options:NSDirectoryEnumerationSkipsHiddenFiles error:nil]) {
-        [self exploit];
+        grant_full_disk_access(^(NSError* _Nullable error) {
+            if (error != nil) {
+            }
+        });
     }
     
     UIViewController *controller1 = [[AppViewController alloc] init];
@@ -39,30 +42,17 @@
 }
 
 - (void)viewDidAppear:(BOOL)animated {
-    [self exploitAlert];
-}
-
-- (void)exploit {
-    grant_full_disk_access(^(NSError* _Nullable error) {
-        if (error != nil) {
-        }
-    });
+    if (![[NSFileManager defaultManager] contentsOfDirectoryAtURL:[NSURL fileURLWithPath:@"/var/mobile"] includingPropertiesForKeys:nil options:NSDirectoryEnumerationSkipsHiddenFiles error:nil])[self exploitAlert];
 }
 
 - (void)exploitAlert {
-    if (![[NSFileManager defaultManager] contentsOfDirectoryAtURL:[NSURL fileURLWithPath:@"/var/mobile"] includingPropertiesForKeys:nil options:NSDirectoryEnumerationSkipsHiddenFiles error:nil]) {
-        UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"Exploit Failed" message:@"Restart app and try again." preferredStyle:UIAlertControllerStyleAlert];
-
-        UIAlertAction *ok = [UIAlertAction actionWithTitle:@"Exit" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
-            [alertController dismissViewControllerAnimated:YES completion:^ {
-                UIApplication *app = [UIApplication sharedApplication];
-                [app performSelector:@selector(suspend)];
-                [NSThread sleepForTimeInterval:1.0];
-                exit(0);
-            }];
+    UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"Exploit Failed" message:@"Restart app and try again." preferredStyle:UIAlertControllerStyleAlert];
+    
+    UIAlertAction *ok = [UIAlertAction actionWithTitle:@"Exit" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+        [alertController dismissViewControllerAnimated:YES completion:^ {
         }];
-        [alertController addAction:ok];
-        [self presentViewController:alertController animated:YES completion:nil];
-    }
+    }];
+    [alertController addAction:ok];
+    [self presentViewController:alertController animated:YES completion:nil];
 }
 @end
