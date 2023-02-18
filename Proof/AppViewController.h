@@ -7,6 +7,10 @@
 
 #import "AppsManager.h"
 
+@interface UIColor (Private)
++ (id)tableCellGroupedBackgroundColor;
+@end
+
 @interface AppViewController : UIViewController<UITableViewDelegate, UITableViewDataSource, UISearchBarDelegate,UISearchResultsUpdating> {
     NSArray *searchResultsArray;
     NSMutableArray *userMutableArray;
@@ -14,6 +18,7 @@
 @property (retain, nonatomic) UISearchController *searchController;
 @property (retain, nonatomic) UITableView *tableView;
 @property (nonatomic, retain) AppsManager *appsManager;
+@property (nonatomic) BOOL shouldHideFirstResponder;
 @end
 
 @interface UIImage (Private)

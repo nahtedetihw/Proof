@@ -37,16 +37,15 @@
                             controller1,
                             controller2,
                             nil];
-    
     [[UIView appearance] setTintColor:[UIColor systemRedColor]];
 }
 
 - (void)viewDidAppear:(BOOL)animated {
-    if (![[NSFileManager defaultManager] contentsOfDirectoryAtURL:[NSURL fileURLWithPath:@"/var/mobile"] includingPropertiesForKeys:nil options:NSDirectoryEnumerationSkipsHiddenFiles error:nil])[self exploitAlert];
+    if (![[NSFileManager defaultManager] contentsOfDirectoryAtURL:[NSURL fileURLWithPath:@"/var/mobile"] includingPropertiesForKeys:nil options:NSDirectoryEnumerationSkipsHiddenFiles error:nil]) [self exploitAlert];
 }
 
 - (void)exploitAlert {
-    UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"Exploit Failed" message:@"Restart app and try again." preferredStyle:UIAlertControllerStyleAlert];
+    UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"Exploit Failed" message:@"Restart app and try again.\nIf this keeps showing, a reboot may be required." preferredStyle:UIAlertControllerStyleAlert];
     
     UIAlertAction *ok = [UIAlertAction actionWithTitle:@"Exit" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
         [alertController dismissViewControllerAnimated:YES completion:^ {

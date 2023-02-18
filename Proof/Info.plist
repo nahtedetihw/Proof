@@ -23,5 +23,7 @@
 	</dict>
 	<key>kTCCServiceMediaLibrary</key>
 	<string>Give me root</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>save image</string>
 </dict>
 </plist>

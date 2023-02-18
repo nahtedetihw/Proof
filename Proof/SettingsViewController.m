@@ -10,14 +10,15 @@
 
 @implementation SettingsViewController
 - (void)viewDidLoad {
-    UITableView *tableView = [[UITableView alloc] initWithFrame:self.view.frame style:UITableViewStyleInsetGrouped];
-    [self.view addSubview:tableView];
-    tableView.delegate = self;
-    tableView.dataSource = self;
+    self.tableView = [[UITableView alloc] initWithFrame:self.view.frame style:UITableViewStyleInsetGrouped];
+    [self.view addSubview:self.tableView];
+    self.tableView.delegate = self;
+    self.tableView.dataSource = self;
+    [self.tableView setValue:[UIColor groupTableViewBackgroundColor] forKey:@"tableHeaderBackgroundColor"];
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
-    return 1;
+    return 3;
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
@@ -31,6 +32,18 @@
             cell.textLabel.text = @"Respring";
             cell.detailTextLabel.text = @"Tap to respring your device.";
             cell.imageView.image = [[UIImage systemImageNamed:@"rays"] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
+        } else if (indexPath.row == 1) {
+            cell = [[UITableViewCell alloc]initWithStyle:
+                    UITableViewCellStyleSubtitle reuseIdentifier:cellIdentifier];
+            cell.textLabel.text = @"Copy All";
+            cell.detailTextLabel.text = @"Copy all Bundle IDs.";
+            cell.imageView.image = [[UIImage systemImageNamed:@"doc.fill"] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
+        } else if (indexPath.row == 2) {
+            cell = [[UITableViewCell alloc]initWithStyle:
+                    UITableViewCellStyleSubtitle reuseIdentifier:cellIdentifier];
+            cell.textLabel.text = @"Copy All";
+            cell.detailTextLabel.text = @"Copy all App Names & Bundle IDs.";
+            cell.imageView.image = [[UIImage systemImageNamed:@"doc.on.doc.fill"] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
         }
     }
     return cell;
@@ -44,6 +57,10 @@
 didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     if (indexPath.row == 0) {
         respringFrontboard();
+    } else if (indexPath.row == 1) {
+        [[NSNotificationCenter defaultCenter] postNotificationName:@"ProofCopyAll" object:nil];
+    } else if (indexPath.row == 2) {
+        [[NSNotificationCenter defaultCenter] postNotificationName:@"ProofCopyAllAppNamesAndBundleIDs" object:nil];
     }
 }
 @end

@@ -28,18 +28,29 @@ NSString *folderPath;
     self.searchController.searchBar.scopeButtonTitles = [[NSArray alloc]initWithObjects:@"App Name", @"Bundle ID", nil];
     self.searchController.searchBar.delegate = self;
     self.searchController.searchResultsUpdater = self;
-    [self.searchController.searchBar sizeToFit];
     self.searchController.obscuresBackgroundDuringPresentation = NO;
     self.definesPresentationContext = NO;
     [self.searchController.searchBar sizeToFit];
-    self.extendedLayoutIncludesOpaqueBars = NO;
+    self.extendedLayoutIncludesOpaqueBars = YES;
     self.tableView.tableHeaderView = self.searchController.searchBar;
+    [self.searchController.searchBar.searchTextField setBackgroundColor:[UIColor tableCellGroupedBackgroundColor]];
+    self.searchController.searchBar.barTintColor = [UIColor groupTableViewBackgroundColor];
+    [self.tableView setValue:[UIColor groupTableViewBackgroundColor] forKey:@"tableHeaderBackgroundColor"];
     self.searchController.hidesNavigationBarDuringPresentation = false;
     self.searchController.searchBar.showsScopeBar = true;
-    
+    if (@available(iOS 16.0, *)) {
+        self.searchController.scopeBarActivation = UISearchControllerScopeBarActivationOnSearchActivation;
+    } else {
+        self.searchController.automaticallyShowsScopeBar = YES;
+    }
     searchResultsArray = [[NSArray alloc]init];
     self.appsManager = [AppsManager new];
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(copyAllBundleIDs) name:@"ProofCopyAllBundleIDs" object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(copyAllAppNamesAndBundleIDs) name:@"ProofCopyAllAppNamesAndBundleIDs" object:nil];
 }
+
+
 
 -(void)updateSearchResultsForSearchController:(UISearchController *)searchController{
     NSString *searchString = self.searchController.searchBar.text;
@@ -100,20 +111,112 @@ didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
             NSString *appIdentifier = app.appIdentifier;
             NSString *bundlePathAndName = [NSString stringWithFormat:@"App Name:\n%@\n\nBundle ID:\n%@", appName, appIdentifier];
             NSString *bundleIDAndName = [NSString stringWithFormat:@"App Name:\n%@\n\nBundle ID:\n%@", appName, appIdentifier];
+            UIImage *appImage = [UIImage _applicationIconImageForBundleIdentifier:app.appIdentifier format:2 scale:[UIScreen mainScreen].scale];
             
             UIAlertController *alertController = [UIAlertController alertControllerWithTitle:appName message:bundlePathAndName preferredStyle:UIAlertControllerStyleAlert];
             
-            UIAlertAction *copy = [UIAlertAction actionWithTitle:@"Copy" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+            UIAlertAction *copy = [UIAlertAction actionWithTitle:@"Copy App Name And BundleID" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
                 UIPasteboard *pasteboard = [UIPasteboard generalPasteboard];
                 [pasteboard setString:bundleIDAndName];
+                UIAlertController *copyController = [UIAlertController alertControllerWithTitle:@"Complete" message:@"App Name & BundleID copied!" preferredStyle:UIAlertControllerStyleAlert];
+                UIAlertAction *copyOk = [UIAlertAction actionWithTitle:@"Dismiss" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+                    [copyController dismissViewControllerAnimated:YES completion:nil];
+                }];
+                [copyController addAction:copyOk];
+                [self presentViewController:copyController animated:YES completion:nil];
+            }];
+            UIAlertAction *copyBundleID = [UIAlertAction actionWithTitle:@"Copy BundleID" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+                UIPasteboard *pasteboard = [UIPasteboard generalPasteboard];
+                [pasteboard setString:appIdentifier];
+                UIAlertController *copyController = [UIAlertController alertControllerWithTitle:@"Complete" message:@"BundleID copied!" preferredStyle:UIAlertControllerStyleAlert];
+                UIAlertAction *copyOk = [UIAlertAction actionWithTitle:@"Dismiss" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+                    [copyController dismissViewControllerAnimated:YES completion:nil];
+                }];
+                [copyController addAction:copyOk];
+                [self presentViewController:copyController animated:YES completion:nil];
+            }];
+            UIAlertAction *copyImage = [UIAlertAction actionWithTitle:@"Save Image" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+                UIImageWriteToSavedPhotosAlbum(appImage, nil, nil, nil);
+                UIAlertController *copyImageController = [UIAlertController alertControllerWithTitle:@"Complete" message:@"App Image saved to Photos!" preferredStyle:UIAlertControllerStyleAlert];
+                UIAlertAction *copyImageOk = [UIAlertAction actionWithTitle:@"Dismiss" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+                    [copyImageController dismissViewControllerAnimated:YES completion:nil];
+                }];
+                [copyImageController addAction:copyImageOk];
+                [self presentViewController:copyImageController animated:YES completion:nil];
             }];
             UIAlertAction *ok = [UIAlertAction actionWithTitle:@"Dismiss" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
                 [alertController dismissViewControllerAnimated:YES completion:nil];
             }];
             [alertController addAction:copy];
+            [alertController addAction:copyBundleID];
+            [alertController addAction:copyImage];
             [alertController addAction:ok];
             [self presentViewController:alertController animated:YES completion:nil];
         }
     }
+}
+
+- (NSMutableArray *)allBundleIDs {
+    NSMutableArray *allBundleIDs = [NSMutableArray new];
+    for (App *app in self.appsManager.allApps) {
+        [allBundleIDs addObject:app.appIdentifier];
+    }
+    return allBundleIDs;
+}
+
+- (NSMutableArray *)allAppNamesAndBundleIDs {
+    NSMutableArray *allAppNamesAndBundleIDs = [NSMutableArray new];
+    for (App *app in self.appsManager.allApps) {
+        [allAppNamesAndBundleIDs addObject:[NSString stringWithFormat:@"App Name:\n%@\nBundle ID:\n%@", app.appName, app.appIdentifier]];
+    }
+    return allAppNamesAndBundleIDs;
+}
+
+- (void)copyAllBundleIDs {
+    NSString* copiedAllString = @"";
+    for (NSString *appIdentifier in [self allBundleIDs]) {
+        copiedAllString = [copiedAllString stringByAppendingString:[NSString stringWithFormat:@"%@\n", appIdentifier]];
+    }
+    UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"Copy All" message:@"Copy all Bundle IDs" preferredStyle:UIAlertControllerStyleAlert];
+    
+    UIAlertAction *copy = [UIAlertAction actionWithTitle:@"Copy" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+        [UIPasteboard generalPasteboard].string = copiedAllString;
+        UIAlertController *copyController = [UIAlertController alertControllerWithTitle:@"Complete" message:@"All Bundle IDs copied!" preferredStyle:UIAlertControllerStyleAlert];
+        UIAlertAction *ok = [UIAlertAction actionWithTitle:@"Dismiss" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+            [copyController dismissViewControllerAnimated:YES completion:nil];
+        }];
+        [copyController addAction:ok];
+        [self presentViewController:copyController animated:YES completion:nil];
+    }];
+    UIAlertAction *ok = [UIAlertAction actionWithTitle:@"Dismiss" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+        [alertController dismissViewControllerAnimated:YES completion:nil];
+    }];
+    [alertController addAction:copy];
+    [alertController addAction:ok];
+    [self presentViewController:alertController animated:YES completion:nil];
+}
+
+- (void)copyAllAppNamesAndBundleIDs {
+    NSString* copiedAllString = @"";
+    for (NSString *appIdentifier in [self allAppNamesAndBundleIDs]) {
+        copiedAllString = [copiedAllString stringByAppendingString:[NSString stringWithFormat:@"%@\n\n", appIdentifier]];
+    }
+    UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"Copy All" message:@"Copy all App Names And Bundle IDs" preferredStyle:UIAlertControllerStyleAlert];
+    
+    UIAlertAction *copy = [UIAlertAction actionWithTitle:@"Copy" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+        [UIPasteboard generalPasteboard].string = copiedAllString;
+        UIAlertController *copyController = [UIAlertController alertControllerWithTitle:@"Complete" message:@"All App Names And Bundle IDs copied!" preferredStyle:UIAlertControllerStyleAlert];
+        UIAlertAction *ok = [UIAlertAction actionWithTitle:@"Dismiss" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+            [copyController dismissViewControllerAnimated:YES completion:nil];
+        }];
+        [copyController addAction:ok];
+        [self presentViewController:copyController animated:YES completion:nil];
+    }];
+    UIAlertAction *ok = [UIAlertAction actionWithTitle:@"Dismiss" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+        [alertController dismissViewControllerAnimated:YES completion:nil];
+    }];
+    [alertController addAction:copy];
+    [alertController addAction:ok];
+    [self presentViewController:alertController animated:YES completion:nil];
 }
 @end

@@ -8,4 +8,5 @@
 #import <UIKit/UIKit.h>
 
 @interface SettingsViewController : UIViewController<UITableViewDelegate, UITableViewDataSource, UIColorPickerViewControllerDelegate>
+@property (retain, nonatomic) UITableView *tableView;
 @end
