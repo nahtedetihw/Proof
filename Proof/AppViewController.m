@@ -105,8 +105,14 @@ NSString *folderPath;
 
 - (void)tableView:(UITableView *)tableView
 didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-    for (App *app in self.appsManager.allApps) {
-        if (app == [self.appsManager.allApps objectAtIndex:indexPath.row]) {
+    NSMutableArray *tempArray;
+    if (self.searchController.active) {
+        tempArray = searchResultsArray.mutableCopy;
+    } else {
+        tempArray = self.appsManager.allApps;
+    }
+    for (App *app in tempArray) {
+        if (app == [tempArray objectAtIndex:indexPath.row]) {
             NSString *appName = app.appName;
             NSString *appIdentifier = app.appIdentifier;
             NSString *bundlePathAndName = [NSString stringWithFormat:@"App Name:\n%@\n\nBundle ID:\n%@", appName, appIdentifier];
@@ -123,7 +129,11 @@ didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
                     [copyController dismissViewControllerAnimated:YES completion:nil];
                 }];
                 [copyController addAction:copyOk];
-                [self presentViewController:copyController animated:YES completion:nil];
+                if (!self.searchController.active) {
+                    [self presentViewController:copyController animated:YES completion:nil];
+                } else {
+                    [self.searchController presentViewController:copyController animated:YES completion:nil];
+                }
             }];
             UIAlertAction *copyBundleID = [UIAlertAction actionWithTitle:@"Copy BundleID" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
                 UIPasteboard *pasteboard = [UIPasteboard generalPasteboard];
@@ -133,7 +143,11 @@ didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
                     [copyController dismissViewControllerAnimated:YES completion:nil];
                 }];
                 [copyController addAction:copyOk];
-                [self presentViewController:copyController animated:YES completion:nil];
+                if (!self.searchController.active) {
+                    [self presentViewController:copyController animated:YES completion:nil];
+                } else {
+                    [self.searchController presentViewController:copyController animated:YES completion:nil];
+                }
             }];
             UIAlertAction *copyImage = [UIAlertAction actionWithTitle:@"Save Image" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
                 UIImageWriteToSavedPhotosAlbum(appImage, nil, nil, nil);
@@ -142,7 +156,11 @@ didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
                     [copyImageController dismissViewControllerAnimated:YES completion:nil];
                 }];
                 [copyImageController addAction:copyImageOk];
-                [self presentViewController:copyImageController animated:YES completion:nil];
+                if (!self.searchController.active) {
+                    [self presentViewController:copyImageController animated:YES completion:nil];
+                } else {
+                    [self.searchController presentViewController:copyImageController animated:YES completion:nil];
+                }
             }];
             UIAlertAction *ok = [UIAlertAction actionWithTitle:@"Dismiss" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
                 [alertController dismissViewControllerAnimated:YES completion:nil];
@@ -151,7 +169,11 @@ didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
             [alertController addAction:copyBundleID];
             [alertController addAction:copyImage];
             [alertController addAction:ok];
-            [self presentViewController:alertController animated:YES completion:nil];
+            if (!self.searchController.active) {
+                [self presentViewController:alertController animated:YES completion:nil];
+            } else {
+                [self.searchController presentViewController:alertController animated:YES completion:nil];
+            }
         }
     }
 }
